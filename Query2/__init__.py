@@ -38,8 +38,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         logging.info("Test de connexion avec py2neo...")
         graph = Graph(neo4j_server, auth=(neo4j_user, neo4j_password))
         producers = graph.run("MATCH (n:Name) WHERE n.birthYear=1960 RETURN count(n)")
-        for producer in producers:
-            dataString += f"CYPHER: nconst={producer['n.nconst']}, primaryName={producer['n.primaryName']}\n"
+        dataString += f"CYPHER: nconst={producers['n.nconst']}, primaryName={producers['n.primaryName']}\n"
 
         try:
             logging.info("Test de connexion avec pyodbc...")
@@ -47,7 +46,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
                 cursor = conn.cursor()
                 cursor.execute("""SELECT COUNT(*) FROM [dbo].[tNames] WHERE primaryName IS NOT NULL""")
 
-                rows = cursor.fetchall()
+                rows = cursor.fetchone()
                 for row in rows:
                     dataString += f"SQL: tconst={row[0]}, primaryTitle={row[1]}, averageRating={row[2]}\n"
 
