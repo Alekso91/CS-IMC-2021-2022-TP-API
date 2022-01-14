@@ -37,15 +37,13 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
     try:
         logging.info("Test de connexion avec py2neo...")
         graph = Graph(neo4j_server, auth=(neo4j_user, neo4j_password))
-        producers = graph.run("MATCH (n:Name)-[:PRODUCED]->(t:Title) WHERE t.primaryTitle CONTAINS 'Spider-Man' RETURN DISTINCT n.nconst, n.primaryName LIMIT 3")
-        for producer in producers:
-            dataString += f"CYPHER: nconst={producer['n.nconst']}, primaryName={producer['n.primaryName']}\n"
+        producers = graph.run("MATCH (n:Name) WHERE n.birthYear=1960 RETURN count(n)")
 
         try:
             logging.info("Test de connexion avec pyodbc...")
             with pyodbc.connect('DRIVER='+driver+';SERVER=tcp:'+server+';PORT=1433;DATABASE='+database+';UID='+username+';PWD='+ password) as conn:
                 cursor = conn.cursor()
-                cursor.execute("SELECT TOP(3) tconst, primaryTitle, averageRating FROM [dbo].[tTitles] ORDER BY averageRating DESC")
+                cursor.execute("""SELECT COUNT(*) FROM [dbo].[tNames] WHERE primaryName IS NOT NULL""")
 
                 rows = cursor.fetchall()
                 for row in rows:
@@ -56,11 +54,15 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
             errorMessage = "Erreur de connexion a la base SQL"
     except:
         errorMessage = "Erreur de connexion a la base Neo4j"
-
+        
+    
     if name:
-        return func.HttpResponse(f"Hello, {name}. This HTTP triggered function executed successfully.")
+        nameMessage = f"Hello, {name}!\n"
     else:
-        return func.HttpResponse(
-             "This HTTP triggered function executed successfully. Pass a name in the query string or in the request body for a personalized response.",
-             status_code=200
-        )
+        nameMessage = "Le parametre 'name' n'a pas ete fourni lors de l'appel.\n"
+    
+    if errorMessage != "":
+        return func.HttpResponse(dataString + nameMessage + errorMessage, status_code=500)
+
+    else:
+        return func.HttpResponse(dataString + nameMessage + " Connexions réussies a Neo4j et SQL!")
