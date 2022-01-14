@@ -38,7 +38,7 @@ def main(req: func.HttpRequest) -> func.HttpResponse:
         logging.info("Test de connexion avec py2neo...")
         graph = Graph(neo4j_server, auth=(neo4j_user, neo4j_password))
         producers = graph.run("MATCH (n:Name) WHERE n.birthYear=1960 RETURN count(n)")
-        dataString += f"CYPHER: nconst={producers['n.nconst']}, primaryName={producers['n.primaryName']}\n"
+        dataString += producers
 
         try:
             logging.info("Test de connexion avec pyodbc...")
